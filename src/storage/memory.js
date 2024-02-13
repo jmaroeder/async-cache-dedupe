@@ -57,8 +57,8 @@ class StorageMemory extends StorageInterface {
 
     const entry = this.store.get(key)
     if (entry) {
-      this.log.debug({ msg: 'acd/storage/memory.get, entry', entry, now: now() })
-      if (entry.start + entry.ttl > now()) {
+      this.log.debug({ msg: 'acd/storage/memory.get, entry', entry, now: Date.now() })
+      if (entry.start + entry.ttl > Date.now()) {
         this.log.debug({ msg: 'acd/storage/memory.get, key is NOT expired', key, entry })
         return entry.value
       }
@@ -81,13 +81,13 @@ class StorageMemory extends StorageInterface {
     const entry = this.store.peek(key)
     let ttl = 0
     if (entry) {
-      ttl = entry.start + entry.ttl - now()
+      ttl = entry.start + entry.ttl - Date.now()
       if (ttl < 0) {
         ttl = 0
       }
     }
 
-    return ttl
+    return Math.ceil(ttl / 1000)
   }
 
   /**
@@ -104,8 +104,9 @@ class StorageMemory extends StorageInterface {
     if (!ttl || ttl < 0) {
       return
     }
+    ttl *= 1000
     const existingKey = this.store.has(key)
-    const removed = this.store.setpop(key, { value, ttl, start: now() })
+    const removed = this.store.setpop(key, { value, ttl, start: Date.now() })
     this.log.debug({ msg: 'acd/storage/memory.set, evicted', removed })
     if (removed && removed.evicted) {
       this.log.debug({ msg: 'acd/storage/memory.set, remove evicted key', key: removed.key })
@@ -392,22 +393,6 @@ class StorageMemory extends StorageInterface {
 
     this.init()
   }
-}
-
-let _timer
-
-function now () {
-  if (_timer !== undefined) {
-    return _timer
-  }
-  _timer = Math.floor(Date.now() / 1000)
-  const timeout = setTimeout(_clearTimer, 1000)
-  if (typeof timeout.unref === 'function') timeout.unref()
-  return _timer
-}
-
-function _clearTimer () {
-  _timer = undefined
 }
 
 module.exports = StorageMemory

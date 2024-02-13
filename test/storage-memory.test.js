@@ -124,8 +124,8 @@ describe('storage memory', async () => {
       const stored = storage.store.get('foo')
 
       assert.equal(stored.value, 'bar')
-      assert.equal(stored.ttl, 1)
-      assert.ok(stored.start < Date.now())
+      assert.equal(stored.ttl, 1000)
+      assert.ok(stored.start <= Date.now())
     })
 
     test('should not set a value with ttl < 1', async () => {
